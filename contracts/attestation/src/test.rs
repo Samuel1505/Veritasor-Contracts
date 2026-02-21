@@ -14,8 +14,7 @@ fn setup() -> (Env, AttestationContractClient<'static>) {
     env.mock_all_auths();
     let contract_id = env.register(AttestationContract, ());
     let client = AttestationContractClient::new(&env, &contract_id);
-    client
-        .initialize(&Address::generate(&env));
+    client.initialize(&Address::generate(&env));
     (env, client)
 }
 
