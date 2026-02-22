@@ -9,7 +9,6 @@
 //! - No unbounded growth of key mappings
 //! - Role and governance consistency
 
-
 use soroban_sdk::testutils::Address as _;
 use soroban_sdk::{Address, Env, String};
 use veritasor_attestation::{AttestationContract, AttestationContractClient};
