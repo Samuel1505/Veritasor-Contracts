@@ -42,7 +42,7 @@
 //! a potential regression requiring investigation.
 
 use super::*;
-use soroban_sdk::testutils::{Address as _, Ledger};
+use soroban_sdk::testutils::Address as _;
 use soroban_sdk::{token, Address, BytesN, Env, String, Vec};
 
 extern crate std;
@@ -56,7 +56,7 @@ struct BudgetSnapshot {
 
 impl BudgetSnapshot {
     fn capture(env: &Env) -> Self {
-        let budget = env.budget();
+        let budget = env.cost_estimate().budget();
         Self {
             cpu_insns: budget.cpu_instruction_cost(),
             mem_bytes: budget.memory_bytes_cost(),
