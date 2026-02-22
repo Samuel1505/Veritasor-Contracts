@@ -83,18 +83,23 @@ impl CostDelta {
         std::println!("\n=== {} ===", operation);
         std::println!("CPU instructions: {}", self.cpu_insns);
         std::println!("Memory bytes: {}", self.mem_bytes);
-        
+
         // Note: In test environment, some operations may show 0 cost
         // This is expected for simple read operations in Soroban's mock environment
         if self.cpu_insns == 0 && self.mem_bytes == 0 {
-            std::println!("Note: Cost tracking shows 0 in test environment (expected for simple operations)");
+            std::println!(
+                "Note: Cost tracking shows 0 in test environment (expected for simple operations)"
+            );
         }
     }
 
     fn assert_within_target(&self, operation: &str, target_cpu: u64, target_mem: u64) {
         // Skip assertion if cost is 0 (test environment limitation)
         if self.cpu_insns == 0 && self.mem_bytes == 0 {
-            std::println!("{}: Skipping assertion (test environment shows 0 cost)", operation);
+            std::println!(
+                "{}: Skipping assertion (test environment shows 0 cost)",
+                operation
+            );
             return;
         }
 
@@ -320,7 +325,11 @@ fn bench_submit_batch_small() {
 
     let avg_cpu = cost.cpu_insns / batch_size;
     let avg_mem = cost.mem_bytes / batch_size;
-    std::println!("Average per operation - CPU: {}, Memory: {}", avg_cpu, avg_mem);
+    std::println!(
+        "Average per operation - CPU: {}, Memory: {}",
+        avg_cpu,
+        avg_mem
+    );
 }
 
 #[test]
@@ -333,7 +342,10 @@ fn bench_submit_batch_large() {
     let before = BudgetSnapshot::capture(&env);
 
     for i in 0..batch_size {
-        let period = String::from_str(&env, &std::format!("2026-{:02}-{:02}", (i / 12) + 1, (i % 12) + 1));
+        let period = String::from_str(
+            &env,
+            &std::format!("2026-{:02}-{:02}", (i / 12) + 1, (i % 12) + 1),
+        );
         let root = BytesN::from_array(&env, &[i as u8; 32]);
         client.submit_attestation(&business, &period, &root, &1_700_000_000u64, &1u32);
     }
@@ -345,7 +357,11 @@ fn bench_submit_batch_large() {
 
     let avg_cpu = cost.cpu_insns / batch_size;
     let avg_mem = cost.mem_bytes / batch_size;
-    std::println!("Average per operation - CPU: {}, Memory: {}", avg_cpu, avg_mem);
+    std::println!(
+        "Average per operation - CPU: {}, Memory: {}",
+        avg_cpu,
+        avg_mem
+    );
 }
 
 // ── Fee Calculation Benchmarks ──────────────────────────────────────
@@ -542,8 +558,16 @@ fn bench_comparative_read_vs_write() {
     let read_cost = before_read.delta(&after_read);
 
     std::println!("\n=== Comparative: Read vs Write ===");
-    std::println!("Write - CPU: {}, Memory: {}", write_cost.cpu_insns, write_cost.mem_bytes);
-    std::println!("Read  - CPU: {}, Memory: {}", read_cost.cpu_insns, read_cost.mem_bytes);
+    std::println!(
+        "Write - CPU: {}, Memory: {}",
+        write_cost.cpu_insns,
+        write_cost.mem_bytes
+    );
+    std::println!(
+        "Read  - CPU: {}, Memory: {}",
+        read_cost.cpu_insns,
+        read_cost.mem_bytes
+    );
     std::println!(
         "Ratio - CPU: {:.2}x, Memory: {:.2}x",
         write_cost.cpu_insns as f64 / read_cost.cpu_insns.max(1) as f64,
