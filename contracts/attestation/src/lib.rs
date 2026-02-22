@@ -295,7 +295,7 @@ impl AttestationContract {
 
     /// Revoke an attestation.
     ///
-    /// Only ADMIN role or the business owner can revoke attestations. 
+    /// Only ADMIN role or the business owner can revoke attestations.
     /// This marks the attestation as invalid without deleting the data (for audit purposes).
     ///
     /// # Arguments
@@ -316,12 +316,12 @@ impl AttestationContract {
         reason: String,
     ) {
         access_control::require_not_paused(&env);
-        
+
         // Authorization: ADMIN or business owner can revoke
         let caller_roles = access_control::get_roles(&env, &caller);
         let is_admin = (caller_roles & access_control::ROLE_ADMIN) != 0;
         let is_business_owner = caller == business;
-        
+
         caller.require_auth();
         assert!(
             is_admin || is_business_owner,
@@ -387,7 +387,7 @@ impl AttestationContract {
     }
 
     /// Check if an attestation has been revoked.
-    /// 
+    ///
     /// Returns true if the attestation exists and has been revoked.
     /// Returns false if the attestation does not exist or has not been revoked.
     pub fn is_revoked(env: Env, business: Address, period: String) -> bool {
@@ -431,7 +431,7 @@ impl AttestationContract {
     ) -> Option<((BytesN<32>, u64, u32, i128), Option<(Address, u64, String)>)> {
         let key = DataKey::Attestation(business.clone(), period.clone());
         let revoked_key = DataKey::Revoked(business, period);
-        
+
         if let Some(attestation_data) = env.storage().instance().get(&key) {
             let revocation_info = env.storage().instance().get(&revoked_key);
             Some((attestation_data, revocation_info))
@@ -512,20 +512,24 @@ impl AttestationContract {
         env: Env,
         business: Address,
         periods: Vec<String>,
-    ) -> Vec<(String, Option<(BytesN<32>, u64, u32, i128)>, Option<(Address, u64, String)>)> {
+    ) -> Vec<(
+        String,
+        Option<(BytesN<32>, u64, u32, i128)>,
+        Option<(Address, u64, String)>,
+    )> {
         let mut results = Vec::new(&env);
-        
+
         for i in 0..periods.len() {
             let period = periods.get(i).unwrap();
             let attestation_key = DataKey::Attestation(business.clone(), period.clone());
             let revoked_key = DataKey::Revoked(business.clone(), period.clone());
-            
+
             let attestation_data = env.storage().instance().get(&attestation_key);
             let revocation_info = env.storage().instance().get(&revoked_key);
-            
+
             results.push_back((period.clone(), attestation_data, revocation_info));
         }
-        
+
         results
     }
 

@@ -1,8 +1,8 @@
 #![cfg(test)]
 
 use crate::test::*;
-use soroban_sdk::{vec, Address, BytesN, String};
 use soroban_sdk::testutils::{Address as _, Events};
+use soroban_sdk::{vec, Address, BytesN, String};
 
 #[test]
 fn test_revocation_by_admin() {
@@ -14,14 +14,25 @@ fn test_revocation_by_admin() {
     let reason = String::from_str(&test.env, "Administrative revocation for audit");
 
     // Submit an attestation first
-    test.submit_attestation(business.clone(), period.clone(), merkle_root.clone(), 1234567890, 1);
+    test.submit_attestation(
+        business.clone(),
+        period.clone(),
+        merkle_root.clone(),
+        1234567890,
+        1,
+    );
 
     // Verify attestation is active
     assert!(!test.is_revoked(business.clone(), period.clone()));
     assert!(test.verify_attestation(business.clone(), period.clone(), &merkle_root));
 
     // Admin revokes the attestation
-    test.revoke_attestation(admin.clone(), business.clone(), period.clone(), reason.clone());
+    test.revoke_attestation(
+        admin.clone(),
+        business.clone(),
+        period.clone(),
+        reason.clone(),
+    );
 
     // Verify revocation
     assert!(test.is_revoked(business.clone(), period.clone()));
@@ -52,14 +63,25 @@ fn test_revocation_by_business_owner() {
     let reason = String::from_str(&test.env, "Business correction");
 
     // Submit an attestation
-        test.submit_attestation(business.clone(), period.clone(), merkle_root.clone(), 1234567891, 1);
+    test.submit_attestation(
+        business.clone(),
+        period.clone(),
+        merkle_root.clone(),
+        1234567891,
+        1,
+    );
 
     // Business owner revokes their own attestation
-        test.revoke_attestation(business.clone(), business.clone(), period.clone(), reason.clone());
+    test.revoke_attestation(
+        business.clone(),
+        business.clone(),
+        period.clone(),
+        reason.clone(),
+    );
 
     // Verify revocation
     assert!(test.is_revoked(business.clone(), period.clone()));
-    
+
     let revocation_info = test.get_revocation_info(business.clone(), period.clone());
     assert!(revocation_info.is_some());
     let (revoked_by, _, returned_reason) = revocation_info.unwrap();
@@ -78,7 +100,13 @@ fn test_unauthorized_revocation() {
     let reason = String::from_str(&test.env, "Unauthorized attempt");
 
     // Submit an attestation
-        test.submit_attestation(business.clone(), period.clone(), merkle_root.clone(), 1234567892, 1);
+    test.submit_attestation(
+        business.clone(),
+        period.clone(),
+        merkle_root.clone(),
+        1234567892,
+        1,
+    );
 
     // Unauthorized user tries to revoke - should panic
     test.revoke_attestation(unauthorized, business.clone(), period.clone(), reason);
@@ -109,7 +137,13 @@ fn test_double_revocation() {
     let reason2 = String::from_str(&test.env, "Second revocation");
 
     // Submit an attestation
-        test.submit_attestation(business.clone(), period.clone(), merkle_root.clone(), 1234567893, 1);
+    test.submit_attestation(
+        business.clone(),
+        period.clone(),
+        merkle_root.clone(),
+        1234567893,
+        1,
+    );
 
     // First revocation
     test.revoke_attestation(admin.clone(), business.clone(), period.clone(), reason1);
@@ -130,7 +164,13 @@ fn test_revocation_preserves_data() {
     let reason = String::from_str(&test.env, "Data preservation test");
 
     // Submit attestation
-        test.submit_attestation(business.clone(), period.clone(), merkle_root.clone(), timestamp, version);
+    test.submit_attestation(
+        business.clone(),
+        period.clone(),
+        merkle_root.clone(),
+        timestamp,
+        version,
+    );
 
     // Get attestation with status before revocation
     let with_status_before = test.get_attestation_with_status(business.clone(), period.clone());
@@ -140,16 +180,21 @@ fn test_revocation_preserves_data() {
     assert!(revocation_info_before.is_none());
 
     // Revoke
-    test.revoke_attestation(admin.clone(), business.clone(), period.clone(), reason.clone());
+    test.revoke_attestation(
+        admin.clone(),
+        business.clone(),
+        period.clone(),
+        reason.clone(),
+    );
 
     // Verify data is preserved after revocation
     let with_status_after = test.get_attestation_with_status(business.clone(), period.clone());
     assert!(with_status_after.is_some());
     let (attestation_data_after, revocation_info_after) = with_status_after.unwrap();
-    
+
     // Attestation data should be identical
     assert_eq!(attestation_data_after, attestation_data);
-    
+
     // Revocation info should now be present
     assert!(revocation_info_after.is_some());
     let (revoked_by, _revocation_timestamp, returned_reason) = revocation_info_after.unwrap();
@@ -161,14 +206,14 @@ fn test_revocation_preserves_data() {
 fn test_business_attestations_query() {
     let test = TestEnv::new();
     let business = Address::generate(&test.env);
-    
+
     let periods = vec![
         &test.env,
         String::from_str(&test.env, "2026-01"),
         String::from_str(&test.env, "2026-02"),
         String::from_str(&test.env, "2026-03"),
     ];
-    
+
     let merkle_roots = [
         BytesN::from_array(&test.env, &[6; 32]),
         BytesN::from_array(&test.env, &[7; 32]),
@@ -227,10 +272,21 @@ fn test_revocation_events() {
     let reason = String::from_str(&test.env, "Event test");
 
     // Submit attestation
-        test.submit_attestation(business.clone(), period.clone(), merkle_root.clone(), 1234567895, 1);
+    test.submit_attestation(
+        business.clone(),
+        period.clone(),
+        merkle_root.clone(),
+        1234567895,
+        1,
+    );
 
     // Admin revokes the attestation
-    test.revoke_attestation(admin.clone(), business.clone(), period.clone(), reason.clone());
+    test.revoke_attestation(
+        admin.clone(),
+        business.clone(),
+        period.clone(),
+        reason.clone(),
+    );
 
     // Verify the revocation event was emitted
     let events = test.env.events().all();
@@ -247,7 +303,13 @@ fn test_revocation_when_paused() {
     let merkle_root = BytesN::from_array(&test.env, &[10; 32]);
 
     // Submit attestation
-    test.submit_attestation(business.clone(), period.clone(), merkle_root.clone(), 1234567896, 1);
+    test.submit_attestation(
+        business.clone(),
+        period.clone(),
+        merkle_root.clone(),
+        1234567896,
+        1,
+    );
 
     // Pause the contract
     test.pause(admin.clone());
@@ -271,10 +333,21 @@ fn test_edge_case_empty_reason() {
     let empty_reason = String::from_str(&test.env, "");
 
     // Submit attestation
-        test.submit_attestation(business.clone(), period.clone(), merkle_root.clone(), 1234567897, 1);
+    test.submit_attestation(
+        business.clone(),
+        period.clone(),
+        merkle_root.clone(),
+        1234567897,
+        1,
+    );
 
     // Revoke with empty reason (should be allowed)
-    test.revoke_attestation(admin.clone(), business.clone(), period.clone(), empty_reason.clone());
+    test.revoke_attestation(
+        admin.clone(),
+        business.clone(),
+        period.clone(),
+        empty_reason.clone(),
+    );
 
     // Verify revocation with empty reason
     let revocation_info = test.get_revocation_info(business.clone(), period.clone());
@@ -294,7 +367,13 @@ fn test_integration_end_to_end_revocation_flow() {
     let revoke_reason = String::from_str(&test.env, "End-to-end test");
 
     // Step 1: Submit initial attestation
-        test.submit_attestation(business.clone(), period.clone(), merkle_root.clone(), 1234567898, 1);
+    test.submit_attestation(
+        business.clone(),
+        period.clone(),
+        merkle_root.clone(),
+        1234567898,
+        1,
+    );
 
     // Step 2: Verify initial state
     assert!(!test.is_revoked(business.clone(), period.clone()));
@@ -317,7 +396,7 @@ fn test_integration_end_to_end_revocation_flow() {
     assert!(test.verify_attestation(business.clone(), period.clone(), &new_merkle_root)); // New root passes
 
     // Step 5: Business owner revokes the migrated attestation
-        test.revoke_attestation(
+    test.revoke_attestation(
         business.clone(),
         business.clone(),
         period.clone(),
@@ -327,11 +406,11 @@ fn test_integration_end_to_end_revocation_flow() {
     // Step 6: Verify final state
     assert!(test.is_revoked(business.clone(), period.clone()));
     assert!(!test.verify_attestation(business.clone(), period.clone(), &new_merkle_root));
-    
+
     // Step 7: Verify data integrity throughout the lifecycle
     let final_data = test.get_attestation(business.clone(), period.clone());
     assert!(final_data.is_some());
-    
+
     let revocation_info = test.get_revocation_info(business.clone(), period.clone());
     assert!(revocation_info.is_some());
     let (revoked_by, _timestamp, reason) = revocation_info.unwrap();
